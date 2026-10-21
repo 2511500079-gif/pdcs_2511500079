@@ -156,7 +156,7 @@ sendResponse(
 );
         //akhir get
         break;
-        
+     
     case 'POST':
         $input = json_decode(file_get_contents('php://input'), true);
 
@@ -185,6 +185,56 @@ sendResponse(
        $q = "INSERT INTO mahasiswa (nama, nim, jurusan_id, created_at) VALUES ('$nama', '$nim', $jurusan_id, CURDATE())";
        if (mysqli_query($koneksi, $q)) {
            sendResponse(true, "Data tersimpan", ["id" => mysqli_insert_id($koneksi)], 201);
+       } else {
+           sendResponse(false, mysqli_error($koneksi), null, 500);
+       }
+        break;
+
+    case 'PUT':
+        //PUT disini
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        //cek apakah input ada dan field nama, nim, jurusan_id ada di dalam body yang dikirimkan
+        if (!isset($input['nama']) || !isset($input['nim']) || !isset($input['jurusan_id'])) {
+            sendResponse(false, "Field nama, nim, dan jurusan_id harus diisi", null, 400);
+        }
+
+        $id = $_GET['id']; //ambil id dari query string
+
+
+        $nama = $input['nama'];
+        $nim = $input['nim'];
+        $jurusan_id = (int) $input['jurusan_id'];
+
+        //cek apakah mahasiswa dengan id tersebut ada?
+
+        $cek_mahasiswa = mysqli_query($koneksi, "SELECT * FROM mahasiswa WHERE id = $id");
+        //jika tidak ada error 404
+
+        if(mysqli_num_rows($cek_mahasiswa) == 0) {
+            sendResponse(false, "Mahasiswa tidak ditemukan", null, 404);
+
+        }
+
+        echo "mahasiswa ada";
+    
+        //cek jurusan apakah ada
+        $cek = mysqli_query($koneksi, "SELECT * FROM jurusan WHERE id = $jurusan_id");
+        if (mysqli_num_rows($cek) == 0) {
+            sendResponse(false, "Jurusan tidak ditemukan", null, 404);
+        }
+
+        //cek nim apakah unik atau tidak 
+        $cek_nim = mysqli_query($koneksi, "SELECT * FROM mahasiswa WHERE nim = '$nim' AND id != $id");
+        if (mysqli_num_rows($cek_nim) > 0) {
+            sendResponse(false, "NIM sudah terdaftar", null, 400);
+        }
+
+       // insert data
+       $q = "UPDATE mahasiswa SET nama = '$nama', nim = '$nim', jurusan_id = $jurusan_id WHERE id = '$id'";
+
+       if (mysqli_query($koneksi, $q)) {
+           sendResponse(true, "Data berhasil diperbarui", ["id" => mysqli_insert_id($koneksi)], 200);
        } else {
            sendResponse(false, mysqli_error($koneksi), null, 500);
        }
