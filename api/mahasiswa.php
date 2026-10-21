@@ -221,7 +221,7 @@ sendResponse(
         //cek jurusan apakah ada
         $cek = mysqli_query($koneksi, "SELECT * FROM jurusan WHERE id = $jurusan_id");
         if (mysqli_num_rows($cek) == 0) {
-            sendResponse(false, "Jurusan tidak ditemukan", null, 404);
+           ~ sendResponse(false, "Jurusan tidak ditemukan", null, 404);
         }
 
         //cek nim apakah unik atau tidak 
@@ -234,9 +234,37 @@ sendResponse(
        $q = "UPDATE mahasiswa SET nama = '$nama', nim = '$nim', jurusan_id = $jurusan_id WHERE id = '$id'";
 
        if (mysqli_query($koneksi, $q)) {
-           sendResponse(true, "Data berhasil diperbarui", ["id" => mysqli_insert_id($koneksi)], 200);
+           sendResponse(true, "Data berhasil diperbarui", ["id" => $id], 200);
        } else {
            sendResponse(false, mysqli_error($koneksi), null, 500);
        }
         break;
+    
+    case 'DELETE':
+    //url: mahasiswa.php?id=1
+    //delete disini
+    $id = $_GET['id'];
+
+    //cek apakah mahasiswa ada
+    $cek_mahasiswa = mysqli_query($koneksi, "SELECT * FROM mahasiswa WHERE id = $id");
+        //jika tidak ada error 404
+        if(mysqli_num_rows($cek_mahasiswa) == 0) {
+            sendResponse(false, "Mahasiswa tidak ditemukan", null, 404);
+        }
+
+        //kalau ada delete
+        //query delete
+        $q = "DELETE FROM mahasiswa WHERE id = $id";
+
+        if (mysqli_query($koneksi, $q)) {
+           sendResponse(true, "Data berhasil dihapus", ["id" => $id], 200);
+       } else {
+           sendResponse(false, mysqli_error($koneksi), null, 500);
+       }
+    break;
+    default:
+        sendResponse(false, "Method not allowed", null, 405);
+        break;
+
+
 }
